@@ -1,0 +1,252 @@
+{
+  "metadata": {
+    "configurationVersions": [3],
+    "clusterVersion": "1.254.0"
+  },
+  "id": "chase-rum-dashboard",
+  "dashboardMetadata": {
+    "name": "GUI - Real User Monitoring Dashboard",
+    "shared": true,
+    "owner": "admin",
+    "sharingDetails": {
+      "linkShared": true,
+      "published": true
+    },
+    "dashboardFilter": {
+      "timeframe": "l_2_HOURS"
+    }
+  },
+  "tiles": [
+    {
+      "name": "User Experience Overview",
+      "tileType": "HEADER",
+      "configured": true,
+      "bounds": {
+        "top": 0,
+        "left": 0,
+        "width": 2280,
+        "height": 38
+      },
+      "tileFilter": {}
+    },
+    {
+      "name": "User Sessions",
+      "tileType": "USERSESSIONS",
+      "configured": true,
+      "bounds": {
+        "top": 76,
+        "left": 0,
+        "width": 380,
+        "height": 266
+      },
+      "tileFilter": {},
+      "chartVisible": true
+    },
+    {
+      "name": "Performance Overview",
+      "tileType": "APPLICATION_WORLDMAP",
+      "configured": true,
+      "bounds": {
+        "top": 76,
+        "left": 380,
+        "width": 760,
+        "height": 266
+      },
+      "tileFilter": {},
+      "assignedEntities": ["APPLICATION-*"]
+    },
+    {
+      "name": "User Satisfaction",
+      "tileType": "DTAQL",
+      "configured": true,
+      "bounds": {
+        "top": 76,
+        "left": 1140,
+        "width": 380,
+        "height": 266
+      },
+      "tileFilter": {},
+      "metric": "APDEX",
+      "query": "select count(*) as \"Sessions\" from usersession where useraction.application=\"Chase Banking\""
+    },
+    {
+      "name": "Key User Actions",
+      "tileType": "CUSTOM_CHARTING",
+      "configured": true,
+      "bounds": {
+        "top": 342,
+        "left": 0,
+        "width": 570,
+        "height": 304
+      },
+      "tileFilter": {},
+      "filterConfig": {
+        "type": "MIXED",
+        "customName": "Key User Actions",
+        "defaultName": "Custom chart",
+        "chartConfig": {
+          "legendShown": true,
+          "type": "TIMESERIES",
+          "series": [
+            {
+              "metric": "calc:service.useractionduration",
+              "aggregation": "AVG",
+              "type": "LINE",
+              "entityType": "USER_ACTION",
+              "dimensions": [],
+              "sortAscending": false,
+              "sortColumn": true,
+              "aggregationRate": "TOTAL"
+            }
+          ],
+          "resultMetadata": {}
+        }
+      }
+    },
+    {
+      "name": "Error Analysis",
+      "tileType": "CUSTOM_CHARTING",
+      "configured": true,
+      "bounds": {
+        "top": 342,
+        "left": 570,
+        "width": 570,
+        "height": 304
+      },
+      "tileFilter": {},
+      "filterConfig": {
+        "type": "MIXED",
+        "customName": "Error Rate",
+        "defaultName": "Custom chart",
+        "chartConfig": {
+          "legendShown": true,
+          "type": "TIMESERIES",
+          "series": [
+            {
+              "metric": "calc:service.errorcountrate",
+              "aggregation": "AVG",
+              "type": "LINE",
+              "entityType": "SERVICE",
+              "dimensions": [],
+              "sortAscending": false,
+              "sortColumn": true,
+              "aggregationRate": "TOTAL"
+            }
+          ],
+          "resultMetadata": {}
+        }
+      }
+    },
+    {
+      "name": "Page Load Time Distribution",
+      "tileType": "CUSTOM_CHARTING",
+      "configured": true,
+      "bounds": {
+        "top": 342,
+        "left": 1140,
+        "width": 570,
+        "height": 304
+      },
+      "tileFilter": {},
+      "filterConfig": {
+        "type": "MIXED",
+        "customName": "Page Load Times",
+        "defaultName": "Custom chart",
+        "chartConfig": {
+          "type": "TIMESERIES",
+          "series": [
+            {
+              "metric": "calc:service.pageloadtime",
+              "aggregation": "PERCENTILE",
+              "percentile": 90,
+              "type": "LINE",
+              "entityType": "APPLICATION",
+              "dimensions": [],
+              "sortAscending": false,
+              "sortColumn": true,
+              "aggregationRate": "TOTAL"
+            }
+          ],
+          "resultMetadata": {}
+        }
+      }
+    },
+    {
+      "name": "User Journey Analysis",
+      "tileType": "DTAQL",
+      "configured": true,
+      "bounds": {
+        "top": 646,
+        "left": 0,
+        "width": 570,
+        "height": 304
+      },
+      "tileFilter": {},
+      "query": "select UserAction, count(*) as Count from usersession group by UserAction order by Count desc"
+    },
+    {
+      "name": "Browser Distribution",
+      "tileType": "CUSTOM_CHARTING",
+      "configured": true,
+      "bounds": {
+        "top": 646,
+        "left": 570,
+        "width": 570,
+        "height": 304
+      },
+      "tileFilter": {},
+      "filterConfig": {
+        "type": "MIXED",
+        "customName": "Browser Types",
+        "defaultName": "Custom chart",
+        "chartConfig": {
+          "type": "PIE",
+          "series": [
+            {
+              "metric": "calc:apps.web.browser.type",
+              "aggregation": "COUNT",
+              "type": "PIE",
+              "entityType": "APPLICATION",
+              "dimensions": ["Browser"],
+              "sortAscending": false,
+              "sortColumn": true
+            }
+          ],
+          "resultMetadata": {}
+        }
+      }
+    },
+    {
+      "name": "Geographic Distribution",
+      "tileType": "CUSTOM_CHARTING",
+      "configured": true,
+      "bounds": {
+        "top": 646,
+        "left": 1140,
+        "width": 570,
+        "height": 304
+      },
+      "tileFilter": {},
+      "filterConfig": {
+        "type": "MIXED",
+        "customName": "User Locations",
+        "defaultName": "Custom chart",
+        "chartConfig": {
+          "type": "PIE",
+          "series": [
+            {
+              "metric": "calc:apps.web.location",
+              "aggregation": "COUNT",
+              "type": "PIE",
+              "entityType": "APPLICATION",
+              "dimensions": ["Country"],
+              "sortAscending": false,
+              "sortColumn": true
+            }
+          ],
+          "resultMetadata": {}
+        }
+      }
+    }
+  ]
+}
