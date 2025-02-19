@@ -1,0 +1,43 @@
+Title: Enhance Reliability & Observability for Dynatrace SaaS POC Demo
+
+Description:
+This story addresses several improvements to enhance the reliability and monitoring of our Dynatrace SaaS platform demo. The following enhancements are included:
+
+Hardcoded Token in Dockerfile:
+Update the Dockerfile to use a hardcoded token for the POC instead of manually passing it. This simplifies configuration for demonstration purposes while noting the temporary nature of this approach.
+
+Seal/Project-Based Docker Image:
+Evaluate the feasibility of using a centrally maintained seal/project-based Docker image rather than building and maintaining a custom image. Document the pros and cons and integrate the project-based image if it meets our requirements.
+
+Enable Logging in POC Environment:
+Ensure that logging is enabled in the POC environment so that all application events (Info, Debug, Error) are captured and visible in Dynatrace, aiding in troubleshooting and monitoring.
+
+Dynamic Log Level Configuration:
+Configure the application so that Dynatrace logging behavior accurately reflects the log level set via an application variable. For instance, when the variable is set to INFO, only info-level (and related logs) should be displayed, and similarly for DEBUG or ERROR.
+
+Investigation of Multiple Java JARs in One-Agent Logs:
+Investigate why multiple Java JAR files are appearing in the Dynatrace one-agent logs. Determine if this is expected behavior, a configuration issue, or if a clean-up is required. Implement corrective actions or document the behavior accordingly.
+
+Acceptance Criteria:
+
+Hardcoded Token Implementation:
+
+The Dockerfile includes a hardcoded token for the POC, with inline comments noting its temporary nature.
+The Docker image builds without requiring manual token input.
+Seal/Project-Based Docker Image Evaluation:
+
+A feasibility study is documented, outlining the benefits and potential issues of adopting a centrally maintained image.
+If adopted, the new image is integrated and tested in the POC environment, with updated documentation reflecting the change.
+Logging Enablement in POC:
+
+Logging is enabled in the POC configuration, and logs (Info, Debug, Error) are visible in Dynatrace.
+Sample log outputs are provided in the documentation for reference.
+Dynamic Log Level Configuration:
+
+The application reads the log level from the specified variable and outputs logs according to the set level (e.g., only INFO logs when set to INFO).
+Tests or manual verification confirm that log levels match the expected behavior in Dynatrace.
+Investigation & Resolution of Multiple Java JARs:
+
+An investigation report is created that explains why multiple Java JARs appear in the one-agent logs.
+Based on findings, either a configuration change is implemented to reduce redundancy, or detailed documentation is added to clarify that the behavior is expected.
+Verification is completed to ensure clarity and correctness in the logs.
