@@ -44,4 +44,37 @@
 | **kubernetes\_state.node.memory\_allocatable.total**       | *None* (no direct cluster metric)    | N/A                                          | No built-in metric for total cluster allocatable memory. Use an aggregation of Node – memory allocatable across all nodes to get cluster-level value. (Cluster-level “total memory” metrics were removed in favor of summing node metrics.)                                 |
 | **kubernetes\_state.node.memory\_allocatable**             | Node – memory allocatable            | `builtin:kubernetes.node.memory_allocatable` | Allocatable memory on a node (bytes available for pods). Kubernetes-only metric provided via Dynatrace’s Kubernetes integration (OneAgent/ActiveGate).                                                                                                                      |
 | **kubernetes\_state.node.cpu\_allocatable**                | Node – CPU allocatable               | `builtin:kubernetes.node.cpu_allocatable`    | Allocatable CPU of a node in millicores (CPU available to pods). Kubernetes node metric via OneAgent/ActiveGate.                                                                                                                                                            |
-| **kubernetes\_state.node.cpu\_allocatable.total**          | *None* (no direct cluster metric)\*  | N/A                                          | No single Dynatrace metric for total cluster CPU allocatable. Aggregate the Node – CPU allocatable metric across all nodes to obtain cluster-wide CPU capacity. (Older cluster CPU metrics were deprecated in favor of per-node metrics.)                                   |
+| **kubernetes\_state.node.cpu\_allocatable.total**          | *None* (no direct cluster metric)\*  | N/A                                          | No single Dynatrace metric for total cluster CPU allocatable. Aggregate the Node – CPU allocatable metric across all nodes to obtain cluster-wide CPU capacity. (Older cluster CPU metrics were deprecated in favor of per-node metrics.)        
+|
+
+
+
+
+
+
+
+
+
+
+
+| CloudWatch metric                                           | Datadog metric                                                         | Dynatrace — **Available?** | Dynatrace — **metric key** (OneAgent / ActiveGate v1.270+)                      |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------- |
+| `apiserver_dropped_requests_total`                          | `kube_apiserver.apiserver_dropped_requests_total`                      | **Y**                      | `builtin:kubernetes.apiserver.dropped_requests_total` ([Dynatrace Docs][1])     |
+| `apiserver_request_terminations_total`                      | `kube_apiserver.apiserver_request_terminations_total`                  | **Y**                      | `builtin:kubernetes.apiserver.request_terminations_total` ([Dynatrace Docs][1]) |
+| `etcd_request_errors_total`                                 | `kube_apiserver.etcd_request_errors_total`                             | **Y**                      | `builtin:kubernetes.etcd.request_errors_total` ([Dynatrace Docs][1])            |
+| `apiserver_APIServiceRegistrationController_depth`          | `kube_apiserver.APIServiceRegistrationController_depth`                | **N**                      | N/A                                                                             |
+| `apiserver_current_inqueue_requests`                        | `kube_apiserver.flowcontrol_current_inqueue_requests`                  | **Y**                      | `builtin:kubernetes.apiserver.current_inqueue_requests` ([Dynatrace Docs][1])   |
+| `apiserver_current_inflight_requests`                       | `kube_apiserver.current_inflight_requests`                             | **Y**                      | `builtin:kubernetes.apiserver.current_inflight_requests` ([Dynatrace Docs][1])  |
+| `etcd_requests_total`                                       | `kube_apiserver.etcd_requests_total`                                   | **Y**                      | `builtin:kubernetes.etcd.requests_total` ([Dynatrace Docs][1])                  |
+| `apiserver_request_total`                                   | `kube_apiserver.apiserver_request_total`                               | **Y**                      | `builtin:kubernetes.apiserver.request_total` ([Dynatrace Docs][1])              |
+| `apiserver_longrunning_requests`                            | `kube_apiserver.longrunning_gauge`                                     | **Y**                      | `builtin:kubernetes.apiserver.longrunning_requests` ([Dynatrace Docs][1])       |
+| `etcd_request_duration_seconds`                             | `kube_apiserver.etcd_request_duration_seconds.count`                   | **Y**                      | `builtin:kubernetes.etcd.request_duration_seconds` ([Dynatrace Docs][1])        |
+| `rest_client_requests_total`                                | `kube_apiserver.rest_client_requests_total`                            | **Y**                      | `builtin:kubernetes.rest_client.requests_total` ([Dynatrace Docs][1])           |
+| `apiserver_request_duration_seconds`                        | `kube_apiserver.request_duration_seconds.count`                        | **Y**                      | `builtin:kubernetes.apiserver.request_duration_seconds` ([Dynatrace Docs][1])   |
+| (**no CW**) “Registered Watchers”                           | `kube_apiserver.registered_watchers`                                   | **N**                      | N/A                                                                             |
+| `apiserver_storage_objects`                                 | `kube_apiserver.storage_objects`                                       | **Y**                      | `builtin:kubernetes.apiserver.storage_objects` ([Dynatrace Docs][1])            |
+| `apiserver_admission_controller_admission_duration_seconds` | `kube_apiserver.admission_controller_admission_duration_seconds.count` | **Y**                      | `builtin:kubernetes.apiserver.admission_duration_seconds` ([Dynatrace Docs][1]) |
+| `apiserver_storage_size_bytes`                              | `kube_apiserver.etcd.db.total_size`                                    | **Y**                      | `builtin:kubernetes.apiserver.storage_size_bytes` ([Dynatrace Docs][1])         |
+
+[1]: https://docs.dynatrace.com/docs/observe/infrastructure-monitoring/container-platform-monitoring/kubernetes-monitoring/alert-on-kubernetes-issues "Alert on common Kubernetes/OpenShift issues — Dynatrace Docs"
+
