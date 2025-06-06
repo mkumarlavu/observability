@@ -1,0 +1,10 @@
+Acceptance Criteria:
+✅ Confirm deletion of the cluster s108088-d108089-use1v1 is successfully deleted.
+
+✅ Cluster s108088-d108089-meks-v1 is upgraded to 1.32 with Lightswitch added and verified.
+
+✅ OTEL and Xray extensions are deployed and validated in MEKS cluster.
+
+✅ Any generated errors from extensions are logged and analyzed.
+
+✅ Ajay receives a concise summary of errors and confirms Jira ticket submission to AWS support.
