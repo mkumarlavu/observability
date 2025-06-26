@@ -137,3 +137,18 @@ telemetry:
     address: localhost:9319
 
 extensions: [memory_ballast]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# "containers-read.gkp.jpmchase.net/container-release/kubecharts/opentelemetry-operator:0.89.0-0.0.2"
