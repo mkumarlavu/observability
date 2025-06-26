@@ -1,10 +1,139 @@
-Acceptance Criteria:
-✅ Confirm deletion of the cluster s108088-d108089-use1v1 is successfully deleted.
+# This file completely replaces the default config
+# Must include ALL existing functionality + new log configuration
 
-✅ Cluster s108088-d108089-meks-v1 is upgraded to 1.32 with Lightswitch added and verified.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:9317
+      http:
+        endpoint: 0.0.0.0:9318
+    tls:
+      cert_file:  "/tmp/ssl/certs/tls.crt"
+      key_file:   "/tmp/ssl/certs/tls.key"
 
-✅ OTEL and Xray extensions are deployed and validated in MEKS cluster.
+  prometheus/self-monitoring:
+    config:
+      scrape_configs:
+        - job_name: "opentelemetry-collector"
+          scrape_interval: 60s
+          static_configs:
+            - targets: ["localhost:9319"]
+          relabel_configs:
+            - action: replace
+              target_label: instance
+              replacement: '{{ include "opentelemetry-collector.service.instance.id" . }}'
 
-✅ Any generated errors from extensions are logged and analyzed.
+  # NEW: Add log receiver
+  filelog:
+    include: 
+      - /var/log/pods/*/*/*.log
+    exclude:
+      - /var/log/pods/*/opentelemetry*/*.log
+    operators:
+      - type: json_parser
+        id: parser-docker
+        output: extract_metadata_from_filepath
+        timestamp:
+          parse_from: attributes.time
+          layout: '%Y-%m-%dT%H:%M:%S.%LZ'
+      - type: regex_parser
+        id: extract_metadata_from_filepath
+        regex: '^.*\/(?P<namespace>[^_]+)_(?P<pod_name>[^_]+)_(?P<uid>[a-f0-9\-]+)\/(?P<container_name>[^\._]+)\/(?P<restart_count>\d+)\.log$'
+        parse_from: attributes["log.file.path"]
+        parse_to: attributes["log.file.path_parsed"]
+      - type: move
+        from: attributes["log.file.path_parsed"]["namespace"]
+        to: resource["k8s.namespace.name"]
+      - type: move
+        from: attributes["log.file.path_parsed"]["pod_name"]
+        to: resource["k8s.pod.name"]
+      - type: move
+        from: attributes["log.file.path_parsed"]["container_name"]
+        to: resource["k8s.container.name"]
 
-✅ Ajay receives a concise summary of errors and confirms Jira ticket submission to AWS support.
+processors:
+  memory_limiter:
+    check_interval:       1s
+    limit_percentage:     70
+    spike_limit_percentage: 14
+  batch:
+    send_batch_max_size: 8192
+    timeout:            5s
+
+exporters:
+  logging:
+    verbosity: detailed
+
+  # Keep existing CloudWatch metrics exporter
+  awsemf/self-monitoring:
+    namespace: EKS/OpenTelemetry
+    dimension_rollup_option: NoDimensionRollup
+    resource_to_telemetry_conversion:
+      enabled: true
+    log_group_name: /aws/eks/otel-collector  # You'll need to set this value
+    log_stream_name: "$(INFO_KUBE_POD_NAME)-self-monitoring"
+    metric_declarations:
+      - metric_name_selectors: ["^otelcol_process_.+$"]
+        dimensions:
+          - ["service.name","service.instance.id","service_version","deployment_location","deployment_environment"]
+      - metric_name_selectors: ["^otelcol_exporter_.+$"]
+        dimensions:
+          - ["service.name","service.instance.id","service_version","deployment_location","deployment_environment","exporter"]
+      - metric_name_selectors: ["^otelcol_processor_.+$"]
+        dimensions:
+          - ["service.name","service.instance.id","service_version","deployment_location","deployment_environment","processor"]
+      - metric_name_selectors: ["^otelcol_receiver_.+$"]
+        dimensions:
+          - ["service.name","service.instance.id","service_version","deployment_location","deployment_environment","receiver"]
+
+  awsemf:
+    namespace: Application/OpenTelemetry
+    dimension_rollup_option: NoDimensionRollup
+    log_group_name: /aws/eks/application-metrics  # You'll need to set this value
+    log_stream_name: "$(INFO_KUBE_POD_NAME)-app-metrics"
+
+  # Keep existing X-Ray exporter
+  awsxray:
+    index_all_attributes: true
+
+  # NEW: Add CloudWatch Logs exporter
+  awscloudwatchlogs:
+    log_group_name: /aws/eks/application-logs
+    log_stream_name: "$(INFO_KUBE_NODE_NAME)/$(INFO_KUBE_POD_NAME)"
+
+extensions:
+  memory_ballast:
+    size_in_percentage: 30
+
+service:
+  # Keep existing pipelines
+  pipelines/self-monitoring:
+    receivers:  [prometheus/self-monitoring]
+    processors: [batch]
+    exporters:  [logging, awsemf/self-monitoring]
+
+  metrics:
+    receivers:  [otlp]
+    processors: [batch]
+    exporters:  [logging, awsemf]
+
+  traces:
+    receivers:  [otlp]
+    processors: [batch]
+    exporters:  [logging, awsxray]
+
+  # NEW: Add logs pipeline
+  logs:
+    receivers:  [filelog]
+    processors: [memory_limiter, batch]
+    exporters:  [logging, awscloudwatchlogs]
+
+telemetry:
+  logs:
+    level: info  # You'll need to set this value
+  metrics:
+    level:   detailed
+    address: localhost:9319
+
+extensions: [memory_ballast]
