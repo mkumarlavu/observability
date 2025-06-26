@@ -151,4 +151,25 @@ extensions: [memory_ballast]
 
 
 
+# Check if your custom config was applied
+#kubectl get opentelemetrycollector -n opentelemetry-system
+
+# Describe the collector to see your custom config
+#kubectl describe opentelemetrycollector opentelemetry -n opentelemetry-system
+
+===>
+# Check collector logs for any errors
+kubectl logs -n opentelemetry-system -l app.kubernetes.io/name=opentelemetry-collector
+
+# Look for:
+# ✅ "Everything is ready. Begin running and processing data."
+# ✅ Log receivers, processors, exporters starting
+# ❌ Any error messages about config or connections
+
+
+
+# Check if the filelog receiver is working
+kubectl logs -n opentelemetry-system -l app.kubernetes.io/name=opentelemetry-collector | grep -i "filelog\|log"
+
+# Should see messages about log files being read
 # "containers-read.gkp.jpmchase.net/container-release/kubecharts/opentelemetry-operator:0.89.0-0.0.2"
