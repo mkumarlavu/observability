@@ -1,0 +1,120 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:9317
+      http:
+        endpoint: 0.0.0.0:9318
+
+prometheus/self-monitoring:
+  config:
+    scrape_configs:
+      - job_name: "opentelemetry-collector"
+        scrape_interval: 60s
+        static_configs:
+          - targets: ["localhost:9319"]
+        relabel_configs:
+          - action: replace
+            target_label: instance
+            replacement: "${INFO_KUBE_POD_NAME}:otel-collector:9319"
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 70
+    spike_limit_percentage: 14
+  batch:
+    send_batch_max_size: 8192
+
+exporters:
+  logging:
+    verbosity: detailed
+
+  prometheus:
+    namespace: EKS/OpenTelemetry
+    dimension_rollup_option: NoDimensionRollup
+    resource_to_telemetry_conversion:
+      enabled: true
+    log_group_name: "/aws/eks/cluster_name/opentelemetry"
+    log_stream_name: "${INFO_KUBE_POD_NAME}-self-monitoring"
+    metric_declarations:
+      - metric_name_selectors: ["^otelcol_process_.+$"]
+        dimensions:
+          - service.name
+          - service.instance.id
+          - service_version
+          - deployment_location
+          - deployment_environment
+      - metric_name_selectors: ["^otelcol_exporter_.+$"]
+        dimensions:
+          - service.name
+          - service.instance.id
+          - service_version
+          - deployment_location
+          - deployment_environment
+          - exporter
+      - metric_name_selectors: ["^otelcol_processor_.+$"]
+        dimensions:
+          - service.name
+          - service.instance.id
+          - service_version
+          - deployment_location
+          - deployment_environment
+          - processor
+      - metric_name_selectors: ["^otelcol_receiver_.+$"]
+        dimensions:
+          - service.name
+          - service.instance.id
+          - service_version
+          - deployment_location
+          - deployment_environment
+          - receiver
+
+  awsemf:
+    namespace: Application/OpenTelemetry
+    dimension_rollup_option: NoDimensionRollup
+    log_group_name: "/aws/eks/cluster_name/opentelemetry"
+    log_stream_name: "${INFO_KUBE_POD_NAME}-app-metrics"
+
+awsxray:
+  index_all_attributes: true
+
+extensions:
+  memory_ballast:
+    size_in_percentage: 30
+
+service:
+  pipelines/self-monitoring:
+    receivers: [prometheus/self-monitoring]
+    processors: [batch]
+    exporters:
+      - logging
+      - awsemf
+
+  metrics:
+    receivers: [otlp]
+    processors: [batch]
+    exporters:
+      - logging
+      - awsemf
+
+  traces:
+    receivers: [otlp]
+    processors: [batch]
+    exporters:
+      - logging
+      - awsxray
+
+telemetry:
+  logs:
+    level: warn
+  traces:
+    service.name: opentelemetry-collector
+    service.instance.id: "${INFO_KUBE_POD_NAME}:otel-collector:9319"
+    service.location: "${cluster_name}"
+    service.environment: "${env}"
+  metrics:
+    level: detailed
+    address: localhost:9319
+
+extensions: [memory_ballast]
