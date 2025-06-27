@@ -66,7 +66,7 @@ exporters:
     resource_to_telemetry_conversion:
       enabled: true
     log_group_name: '/aws/eks/${cluster_name}/opentelemetry'
-    log_stream_name: '${INFO_KUBE_POD_NAME}-self-monitoring'
+    log_stream_name: '$${INFO_KUBE_POD_NAME}-self-monitoring'
     metric_declarations:
       - metric_name_selectors: ["^otelcol_process_.+$"]
         dimensions: [["service.name", "service.instance.id", "service.version", "deployment.location", "deployment.environment"]]
@@ -91,7 +91,7 @@ exporters:
   # NEW: CloudWatch Logs exporter
   awscloudwatchlogs:
     log_group_name: /aws/eks/${cluster_name}/application-logs
-    log_stream_name: "${INFO_KUBE_NODE_NAME}/${INFO_KUBE_POD_NAME}"
+    log_stream_name: "$${INFO_KUBE_NODE_NAME}/${INFO_KUBE_POD_NAME}"
     log_retention: 30
 
 extensions:
