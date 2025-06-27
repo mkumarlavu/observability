@@ -1,0 +1,121 @@
+Our OpenTelemetry observability stack is partially functional - metrics ✅ and traces ✅ are working, but log collection is blocked ❌ due to missing volume mounts in the Helm chart configuration.
+Impact: Unable to achieve complete observability, limiting debugging capabilities and compliance reporting.
+Required Action: Platform team needs to add volume mounts to our OpenTelemetry Helm chart for Kubernetes log file access.
+
+
+
+🚨 Current Issue
+Problem Statement
+The OpenTelemetry collector cannot read Kubernetes pod logs, resulting in:
+
+No application logs in CloudWatch
+Incomplete observability stack
+Error message: finding files: no files match the configured criteria
+
+Root Cause Analysis
+bash# Diagnostic command showing missing volume mounts:
+kubectl describe pod opentelemetry-collector-* -n opentelemetry | grep -A 15 "Mounts:"
+
+# Current mounts (what we have):
+/conf from otc-internal (rw)
+/tmp/ssl/certs from tls (rw)  
+/var/run/secrets/kubernetes.io/serviceaccount
+
+# Missing mounts (what we need):
+/var/log/pods from varlogpods (ro)        # ← MISSING
+/var/log/containers from varlogcontainers (ro)  # ← MISSING
+
+
+Current Architecture
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   Applications  │───▶│  OpenTelemetry   │───▶│   CloudWatch    │
+│                 │    │    Collector     │    │                 │
+│ • Metrics   ✅  │    │                  │    │ • Metrics   ✅  │
+│ • Traces    ✅  │    │ • Helm Deployed  │    │ • Traces    ✅  │
+│ • Logs      ❌  │    │ • Missing Volumes│    │ • Logs      ❌  │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+Required Volume Mounts
+Volume NameHost PathContainer PathAccessPurposevarlogpods/var/log/pods/var/log/podsReadOnlyKubernetes pod logsvarlogcontainers/var/log/containers/var/log/containersReadOnlyContainer symlinks
+Deployment Configuration
+
+Method: Helm Chart (opentelemetry-collector)
+Namespace: opentelemetry
+Mode: DaemonSet (required for log collection)
+Security: Non-root, ReadOnly volumes
+
+
+
+📝 Solution Specification
+Helm Chart Modifications Required
+File: opentelemetry/charts/opentelemetry-collector/values.yaml
+Add Volume Configuration
+yaml# Ensure DaemonSet mode for log collection
+mode: daemonset
+
+# Add volume definitions
+extraVolumes:
+  - name: varlogpods
+    hostPath:
+      path: /var/log/pods
+      type: Directory
+  - name: varlogcontainers
+    hostPath:
+      path: /var/log/containers
+      type: Directory
+
+# Add volume mounts
+extraVolumeMounts:
+  - name: varlogpods
+    mountPath: /var/log/pods
+    readOnly: true
+  - name: varlogcontainers
+    mountPath: /var/log/containers
+    readOnly: true
+
+# Security context (non-root)
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  fsGroup: 65534
+Configuration Integration
+The application team will handle the collector configuration update to include:
+
+filelog receiver for log collection
+awscloudwatchlogs exporter for CloudWatch integration
+Log processing pipeline
+
+
+
+
+
+🔄 Implementation Plan
+Phase 1: Platform Team Tasks ⏱️ Est: 30 minutes
+
+Review Security - Confirm hostPath volume approval
+Update values.yaml - Add volume mount configuration
+Deploy Changes - Helm upgrade with new configuration
+Basic Verification - Confirm pods restart successfully
+
+Phase 2: Application Team Tasks ⏱️ Est: 45 minutes
+
+Update Config - Add filelog receiver and CloudWatch exporter
+Deploy Configuration - Apply via Terraform
+End-to-End Testing - Verify logs appear in CloudWatch
+Documentation - Update runbooks and monitoring guides
+
+Phase 3: Validation ⏱️ Est: 15 minutes
+
+Monitoring - Set up alerting for log collection failures
+Documentation - Update operational procedures
+Knowledge Transfer - Brief support teams on new capabilities
+
+
+
+
+
+
+Technical Documentation
+
+https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver/filelogreceiver
+https://kubernetes.io/docs/concepts/cluster-administration/logging/
+https://github.com/open-telemetry/opentelemetry-helm-charts
