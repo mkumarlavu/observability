@@ -1,0 +1,137 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:9317
+      http:
+        endpoint: 0.0.0.0:9318
+
+  prometheus/self-monitoring:
+    config:
+      scrape_configs:
+        - job_name: 'opentelemetry-collector'
+          scrape_interval: 60s
+          static_configs:
+            - targets: ['localhost:9319']
+          relabel_configs:
+            - action: replace
+              target_label: instance
+              replacement: 'opentelemetry:${INFO_KUBE_POD_NAME}:ote-container:9319'
+
+  # NEW: Log receiver for Kubernetes pod logs
+  filelog:
+    include: 
+      - /var/log/pods/*/*/*.log
+    exclude:
+      - /var/log/pods/*/opentelemetry*/*.log
+    operators:
+      - type: json_parser
+        id: parser-docker
+        output: extract_metadata_from_filepath
+        timestamp:
+          parse_from: attributes.time
+          layout: '%Y-%m-%dT%H:%M:%S.%LZ'
+      - type: regex_parser
+        id: extract_metadata_from_filepath
+        regex: '^.*\/(?P<namespace>[^_]+)_(?P<pod_name>[^_]+)_(?P<uid>[a-f0-9\-]+)\/(?P<container_name>[^\._]+)\/(?P<restart_count>\d+)\.log$'
+        parse_from: attributes["log.file.path"]
+        parse_to: attributes["log.file.path_parsed"]
+      - type: move
+        from: attributes["log.file.path_parsed"]["namespace"]
+        to: resource["k8s.namespace.name"]
+      - type: move
+        from: attributes["log.file.path_parsed"]["pod_name"]
+        to: resource["k8s.pod.name"]
+      - type: move
+        from: attributes["log.file.path_parsed"]["container_name"]
+        to: resource["k8s.container.name"]
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_percentage: 70
+    spike_limit_percentage: 14
+  
+  batch:
+    timeout: 5s
+    send_batch_max_size: 8192
+
+exporters:
+  logging:
+    verbosity: detailed
+
+  awsemf/self-monitoring:
+    namespace: 'EKS/Opentelemetry'
+    dimension_rollup_option: NoDimensionRollup
+    resource_to_telemetry_conversion:
+      enabled: true
+    log_group_name: '/aws/eks/${cluster_name}/opentelemetry'
+    log_stream_name: '${INFO_KUBE_POD_NAME}-self-monitoring'
+    metric_declarations:
+      - metric_name_selectors: ["^otelcol_process_.+$"]
+        dimensions: [["service.name", "service.instance.id", "service.version", "deployment.location", "deployment.environment"]]
+      - metric_name_selectors: ["^otelcol_exporter_.+$"]
+        dimensions: [["service.name", "service.instance.id", "service.version", "deployment.location", "deployment.environment", "exporter"]]
+      - metric_name_selectors: ["^otelcol_processor_.+$"]
+        dimensions: [["service.name", "service.instance.id", "service.version", "deployment.location", "deployment.environment", "processor"]]
+      - metric_name_selectors: ["^otelcol_receiver_.+$"]
+        dimensions: [["service.name", "service.instance.id", "service.version", "deployment.location", "deployment.environment", "receiver"]]
+
+  awsemf:
+    namespace: Application/OpenTelemetry
+    dimension_rollup_option: NoDimensionRollup
+    log_group_name: /aws/eks/${cluster_name}/opentelemetry
+    log_stream_name: "${INFO_KUBE_POD_NAME}-app-metrics"
+    resource_to_telemetry_conversion:
+      enabled: true
+
+  awsxray:
+    index_all_attributes: true
+
+  # NEW: CloudWatch Logs exporter
+  awscloudwatchlogs:
+    log_group_name: /aws/eks/${cluster_name}/application-logs
+    log_stream_name: "${INFO_KUBE_NODE_NAME}/${INFO_KUBE_POD_NAME}"
+    log_retention: 30
+
+extensions:
+  memory_ballast:
+    size_in_percentage: 30
+
+service:
+  pipelines:
+    metrics/self-monitoring-to-cloudwatch:
+      receivers: [prometheus/self-monitoring]
+      processors: [batch]
+      exporters: [logging, awsemf/self-monitoring]
+    
+    metrics/app-metrics-to-cloudwatch:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging, awsemf]
+    
+    traces/app-traces-to-cloudwatch-xray:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [logging, awsxray]
+    
+    # NEW: Logs pipeline to CloudWatch
+    logs/app-logs-to-cloudwatch:
+      receivers: [filelog]
+      processors: [memory_limiter, batch]
+      exporters: [logging, awscloudwatchlogs]
+
+  telemetry:
+    logs:
+      level: warn
+    resources:
+      telemetry.spec.version: "1.0.0"
+      application.id: "${app_id}"
+      service.name: "opentelemetry-collector"
+      service.instance.id: "opentelemetry:$${INFO_KUBE_POD_NAME}:ote-container:9319"
+      deployment.location: "eks:${region}:${cluster_name}:${env}"
+      deployment.environment: '${env}'
+    metrics:
+      level: detailed
+      address: localhost:9319
+  extensions: [memory_ballast]
