@@ -245,3 +245,14 @@ Security Assessment
 
 
 
+
+
+xray-setup must be deployed first before eks-xray
+#
+# Why? The setup module creates the KMS keys and VPC endpoints that 
+# the main X-Ray extension needs to function. Without these prereqs,
+# the eks-xray deployment will fail.
+#
+# Also keeps things clean - setup handles the one-time infrastructure
+# stuff while the extension handles the actual X-Ray daemon/collectors.
+# This way we don't accidentally nuke important infra during updates.
