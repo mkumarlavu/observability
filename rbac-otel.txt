@@ -35,3 +35,17 @@ roleRef:
   kind: Role
   name: otel-agent-reader      # ← Name of the Role above
   apiGroup: rbac.authorization.k8s.io
+
+
+# cilium-permissive-egress.yaml
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-all-egress
+  namespace: meks-poc
+spec:
+  endpointSelector: {}
+  egress:
+    - {}
+  egressDeny:
+    - {}
