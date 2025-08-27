@@ -37,15 +37,15 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 
 
-# cilium-permissive-egress.yaml
+# cilium-permissive.yaml
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: allow-all-egress
+  name: allow-all-traffic
   namespace: meks-poc
 spec:
-  endpointSelector: {}
+  endpointSelector: {}  # Applies to all pods in meks-poc
+  ingress:
+    - {}  # Allow all inbound traffic
   egress:
-    - {}
-  egressDeny:
-    - {}
+    - {}  # Allow all outbound traffic
