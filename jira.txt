@@ -1,0 +1,125 @@
+# JIRA Ticket: OpenTelemetry Auto-Instrumentation Connection Failures
+
+## **Issue Type:** Bug
+**Priority:** High  
+**Component:** Observability/Monitoring  
+**Affects Version:** Current  
+
+---
+
+## **Description**
+
+The meks-sample-app Java Spring Boot application experiences connection failures and timeouts when OpenTelemetry auto-instrumentation is enabled. The application functions normally without auto-instrumentation but fails to export telemetry data when the Java agent is attached.
+
+**Key Error Patterns:**
+- gRPC connection failures to OpenTelemetry collector (status code 2)
+- Socket timeouts and connection refused errors
+- Repeated export failures to `opentelemetry-collector.opentelemetry.svc:5317`
+- InterruptedIOException timeouts during telemetry data transmission
+
+**Environment:**
+- Application: meks-sample-app (Java Spring Boot)
+- OpenTelemetry Java Agent version: [to be determined]
+- Target collector endpoint: `opentelemetry-collector.opentelemetry.svc:5317`
+- Runtime: Java (appears to be running in Kubernetes)
+
+---
+
+## **Steps to Reproduce**
+
+1. Start meks-sample-app without OpenTelemetry auto-instrumentation → Works normally
+2. Enable OpenTelemetry auto-instrumentation Java agent
+3. Start the application
+4. Observe connection failures and timeout errors in application logs
+5. Note that telemetry data is not being exported successfully
+
+---
+
+## **Expected Behavior**
+
+- Application should start successfully with OpenTelemetry auto-instrumentation enabled
+- Telemetry data (traces, metrics, logs) should be exported to the OpenTelemetry collector without errors
+- No connection timeouts or gRPC failures should occur
+- Application functionality should remain unaffected by instrumentation
+
+---
+
+## **Actual Behavior**
+
+- Application experiences repeated connection failures to OpenTelemetry collector
+- gRPC status code 2 errors occur continuously
+- Socket timeouts and InterruptedIOExceptions are thrown
+- Telemetry export operations fail consistently
+- Application may experience performance degradation due to retry attempts
+
+---
+
+## **Acceptance Criteria**
+
+### **Primary Criteria:**
+- [ ] Application starts successfully with OpenTelemetry auto-instrumentation enabled
+- [ ] Telemetry data exports successfully to the configured collector endpoint
+- [ ] No connection timeout errors or gRPC failures occur during normal operation
+- [ ] Application performance is not negatively impacted by instrumentation
+
+### **Secondary Criteria:**
+- [ ] Proper error handling and graceful degradation if collector is temporarily unavailable
+- [ ] Configurable timeout and retry settings for telemetry export
+- [ ] Clear logging that distinguishes between application errors and instrumentation issues
+- [ ] Documentation updated with correct instrumentation configuration
+
+### **Verification Steps:**
+- [ ] Deploy application with auto-instrumentation in test environment
+- [ ] Verify successful telemetry data flow to collector
+- [ ] Confirm application logs show no instrumentation-related errors
+- [ ] Validate that traces and metrics appear in monitoring dashboard
+- [ ] Performance testing shows no significant degradation
+
+---
+
+## **Business Justification**
+
+### **Impact on Operations:**
+- **Observability Gap:** Without functioning auto-instrumentation, we lose critical application performance insights, distributed tracing capabilities, and monitoring data
+- **Troubleshooting Efficiency:** Missing telemetry data significantly increases mean time to resolution (MTTR) for production issues
+- **SLA Risk:** Inability to monitor application performance may lead to undetected issues affecting service level agreements
+
+### **Business Value:**
+- **Improved Incident Response:** Proper instrumentation enables faster root cause analysis and reduces downtime
+- **Performance Optimization:** Telemetry data helps identify bottlenecks and optimization opportunities
+- **Cost Management:** Better observability leads to more efficient resource utilization and cost control
+- **Customer Experience:** Proactive monitoring helps prevent customer-facing issues
+
+### **Risk Assessment:**
+- **High Priority:** This blocks our observability strategy implementation
+- **Security Consideration:** Ensure instrumentation doesn't introduce security vulnerabilities
+- **Scalability Impact:** Proper telemetry is essential for scaling decisions and capacity planning
+
+---
+
+## **Potential Root Causes to Investigate**
+
+1. **Network Connectivity:** Verify collector service is accessible from application pods
+2. **Configuration Issues:** Check OpenTelemetry agent configuration and collector endpoint settings
+3. **Authentication/Authorization:** Ensure proper credentials for collector access
+4. **Resource Constraints:** Verify sufficient memory/CPU for instrumentation overhead
+5. **Version Compatibility:** Check compatibility between Java agent and collector versions
+6. **Firewall/Security Groups:** Validate network policies allow traffic to collector port
+
+---
+
+## **Suggested Investigation Steps**
+
+1. Verify OpenTelemetry collector service is running and accessible
+2. Check network connectivity from app to collector endpoint
+3. Review OpenTelemetry agent configuration parameters
+4. Test with minimal instrumentation configuration
+5. Examine collector logs for incoming connection attempts
+6. Validate Kubernetes service discovery and DNS resolution
+
+---
+
+## **Labels:** `observability`, `opentelemetry`, `java`, `instrumentation`, `monitoring`, `bug`
+
+**Reporter:** [Your Name]  
+**Created:** [Current Date]
