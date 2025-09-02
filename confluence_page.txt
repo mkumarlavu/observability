@@ -1,0 +1,67 @@
+# OpenTelemetry Agent Questions for EKS Team
+
+## Deployment & Configuration Questions
+
+| **Category** | **Question** | **Reason/Context** | **Priority** |
+|--------------|--------------|-------------------|--------------|
+| **Agent Architecture** | I understand we have opentelemetry-collector and opentelemetry-operator in the opentelemetry namespace, with the operator acting as a DaemonSet. Can you confirm this architecture and explain how these components work together? | Need to validate my understanding of the deployment architecture | High |
+| **Auto-Instrumentation** | When I enable auto-instrumentation, I understand a sidecar injector image gets deployed. What is this sidecar injector image, and how does it work? | Understanding the auto-instrumentation mechanism | High |
+| **Agent Library Source** | After auto-instrumentation, where do the actual agent libraries (like otel.javaagent for Java apps) come from - are they pulled from the sidecar image, downloaded at runtime, or pre-bundled? | Need to understand the library injection process | High |
+| **Instrumentation Images** | What container images are used for auto-instrumentation for different languages (Java, Python, Node.js, etc.), and where are these images stored? | Planning for different application types | High |
+| **Agent Architecture** | I understand we have opentelemetry-collector and opentelemetry-operator in the opentelemetry namespace, with the operator acting as a DaemonSet. Can you confirm this architecture and explain how these components work together? | Need to validate my understanding of the deployment architecture | High |
+| **Component Relationships** | How do the opentelemetry-operator and opentelemetry-collector work together during the auto-instrumentation process - does the operator handle injection while the collector handles telemetry data? | Understanding the division of responsibilities | High |
+| **Auto-Instrumentation** | When I enable auto-instrumentation, I understand a sidecar injector image gets deployed. What is this sidecar injector image, and how does it work? | Understanding the auto-instrumentation mechanism | High |
+| **Agent Library Source** | After auto-instrumentation, where do the actual agent libraries (like otel.javaagent for Java apps) come from - are they pulled from the sidecar image, downloaded at runtime, or pre-bundled? | Need to understand the library injection process | High |
+| **Instrumentation Images** | What container images are used for auto-instrumentation for different languages (Java, Python, Node.js, etc.), and where are these images stored? | Planning for different application types | High |
+| **Library Versions** | How are the OpenTelemetry SDK and agent library versions managed - are they pinned to specific versions or automatically updated? | Understanding version control and compatibility | Medium |
+| **Agent Configuration** | What custom configuration components are included (Operator, Collector, or both)? | Understanding the architecture for proper integration | High |
+| **Namespace & Extensions** | Will the OpenTelemetry namespace be automatically created when I apply my Terraform with the extension, or do I need to request it separately? | I have an extension in my Terraform and need to know if namespace creation is handled | High |
+| **Daemon vs Agent** | What's the difference between the Agent and DaemonSet configuration in your deployment? | Understanding the deployment pattern | Medium |
+| **OTEL Daemon Behavior** | Does OTEL act as a DaemonSet and install on all nodes, or is the Collector the only DaemonSet running on each node? | Need to understand resource allocation and node coverage | High |
+
+## Monitoring & Metrics Questions
+
+| **Category** | **Question** | **Reason/Context** | **Priority** |
+|--------------|--------------|-------------------|--------------|
+| **Metrics Collection** | What exporters does OTEL use to collect metrics - Prometheus, or is OTEL handling everything for both Infrastructure and Application metrics? | Need to understand monitoring setup | High |
+| **API Requirements** | Does OTEL require any additional API extensions from Kube API, Kubelet API, or Host System, or is everything provided by the cluster? | Understanding dependencies and permissions | Medium |
+| **Log Management** | How are application logs routed to CloudWatch - do I need to configure anything specific for my applications? | Currently testing log routing | High |
+| **Telemetry Modules** | What does the OTEL collector's eks-open-telemetry module extension create - corenode, appNode, or both? | Understanding what gets deployed with my Terraform | High |
+
+## Integration & Connectivity Questions
+
+| **Category** | **Question** | **Reason/Context** | **Priority** |
+|--------------|--------------|-------------------|--------------|
+| **App Discovery** | How does the collector discover and link to applications running on different nodes? | Need to understand service discovery | Medium |
+| **Pod Log Routing** | Can you provide details on how pods send logs to CloudWatch through the OTEL setup? | Understanding the log pipeline | Medium |
+| **Metrics Scope** | What specific metrics does OTEL collect from applications vs infrastructure - can you provide a breakdown? | Planning monitoring strategy | Medium |
+| **Image Management** | How does the application pick up the correct OTEL image during runtime or build time, and where is this configured? | Understanding image versioning and updates | Low |
+
+## Version & Updates Questions
+
+| **Category** | **Question** | **Reason/Context** | **Priority** |
+|--------------|--------------|-------------------|--------------|
+| **Version Management** | Is the OpenTelemetry image still on version 0.69, and if not, what's the current version and update schedule? | Planning for compatibility | Medium |
+| **Update Process** | How are OTEL component updates handled - do I need to update my Terraform, or is it managed centrally? | Understanding maintenance responsibilities | Medium |
+| **Prerequisites** | Is xray-setup needed as a prerequisite for OTEL, or does OTEL handle distributed tracing independently? | Understanding dependencies | Low |
+
+## Support & Troubleshooting Questions
+
+| **Category** | **Question** | **Reason/Context** | **Priority** |
+|--------------|--------------|-------------------|--------------|
+| **Troubleshooting** | What logs or metrics should I monitor to ensure OTEL is working correctly with my applications? | Setting up monitoring and alerts | High |
+| **Configuration Validation** | How can I verify that my Terraform extension configuration is compatible with your OTEL setup? | Ensuring successful deployment | High |
+| **Support Process** | What's the escalation process if I encounter issues with OTEL integration in my applications? | Understanding support workflow | Medium |
+| **Documentation** | Do you have specific documentation or examples for applications integrating with your OTEL setup? | Need implementation guidance | Medium |
+
+## Additional Context Questions
+
+| **Category** | **Question** | **Reason/Context** | **Priority** |
+|--------------|--------------|-------------------|--------------|
+| **Resource Limits** | Are there any resource limits or quotas I should be aware of when using OTEL services? | Planning resource allocation | Medium |
+| **Security** | Are there any security considerations or network policies I need to account for with OTEL integration? | Ensuring security compliance | Medium |
+| **Multi-Environment** | How does the OTEL setup differ between dev, staging, and production environments? | Planning deployment strategy | Low |
+
+---
+
+**Note**: Since I don't have direct access to helm charts and configurations are managed by the central EKS team, these questions focus on understanding the provided services and how to integrate properly rather than making configuration changes.
