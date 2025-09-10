@@ -1,0 +1,18 @@
+Infrastructure & Application Monitoring:
+
+Distributed Tracing Infrastructure Monitoring using OneAgent deployment
+Cluster Monitoring implementation using OneAgent
+Configured DT SaaS integration in ECS environment with comprehensive monitoring of Hosts, Metrics, and Traces for Modernscore application
+
+Dashboard & Visualization:
+
+Successfully exported and migrated dashboards from DT Managed to SaaS environment
+
+Cloud Integration:
+
+Implemented Dynatrace SaaS CloudWatch integration for enhanced AWS monitoring capabilities
+
+Synthetic Monitoring & Alerting:
+
+Created and executed synthetic monitors for proactive application monitoring
+Configured alerting profiles and problem notification workflows
