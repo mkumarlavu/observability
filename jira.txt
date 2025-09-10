@@ -123,3 +123,17 @@ The meks-sample-app Java Spring Boot application experiences connection failures
 
 **Reporter:** [Your Name]  
 **Created:** [Current Date]
+
+
+
+
+
+
+Export Dashboards from DT Managed to SaaS
+Distributed Tracing
+Infrastructure Monitoring using one-agent
+Cluster Monitorting using one-agent
+Dynatrace SaaS cloudwatch Integration
+Creation and execution of synthetic monitors
+Creation of alerting profile and problem notifications
+Configured Dt_SaaS in ECS and monitored Hosts, Mertrics and Traces of Modernscore app.
