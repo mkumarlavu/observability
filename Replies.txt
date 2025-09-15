@@ -16,3 +16,38 @@ Synthetic Monitoring & Alerting:
 
 Created and executed synthetic monitors for proactive application monitoring
 Configured alerting profiles and problem notification workflows
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+✅ Working Scenarios:
+
+Infrastructure & Application Monitoring: OneAgent deployment for distributed tracing and cluster monitoring
+Dynatrace SaaS integration: ECS environment monitoring (Hosts, Metrics, Traces for Modernscore application)
+Dashboard Migration: Successfully exported and migrated dashboards from DT Managed to SaaS
+Cloud Integration: Dynatrace SaaS CloudWatch integration for AWS monitoring
+Synthetic Monitoring: Created and executed synthetic monitors with alerting profiles
+
+❌ Not Working Scenarios:
+
+EKS CloudWatch Metrics: Stopped working after C2C team's IMDS proxy changes (PCSR ticket raised)
+OpenTelemetry Logs: Cannot send logs to CloudWatch (Jira raised, research shared with Robert/Poffle team)
+
+🔄 Work in Progress:
+
+OAS Basic Understanding: Documentation completed
+EKS with OAS - Dynatrace SaaS: In progress
+ECS with OAS - Dynatrace SaaS: In progress
