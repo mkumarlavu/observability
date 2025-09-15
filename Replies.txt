@@ -20,11 +20,37 @@ Configured alerting profiles and problem notification workflows
 
 
 
+Extensions Deployed:
+
+eks-opentelemetry: OpenTelemetry Collector for metrics and traces collection
+eks-xray: AWS X-Ray integration for distributed tracing
+xray-setup: Configuration and setup utilities for X-Ray integration
+
+✅ Successfully Implemented Features
+EKS Cluster-Level Monitoring:
+
+Node Metrics: CPU, Memory, Network, and Disk utilization from all EKS nodes
+Pod Metrics: Resource consumption, restart counts, and health status across namespaces
+Cluster Metrics: Overall cluster health, API server metrics, and etcd performance
+Kubernetes Events: Deployment, scaling, and error events from the cluster
 
 
 
 
+Application-Level Monitoring:
 
+Distributed Tracing: End-to-end request tracing across microservices
+Service Maps: Since the application was simple hello world saw few dependency call patterns -- Need to verify properly.
+
+Current Issues & Blockers
+- IMDS Proxy Configuration Issue:
+
+Root Cause: C2C team implemented changes to the Instance Metadata Service (IMDS) proxy configuration
+Impact: Complete disruption of metrics transmission from EKS to CloudWatch using eks-opentelemetry module
+Timeline: Issue started after the infrastructure change implementation
+Action Taken: PCSR ticket raised with detailed error logs and configuration details
+
+- eks-opentelemetry module not able to send logs to cloudwatch raised jira and shared my research to Robert, Poffle team.
 
 
 
