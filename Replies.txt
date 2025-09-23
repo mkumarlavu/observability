@@ -1,79 +1,21 @@
-Infrastructure & Application Monitoring:
+Hi Robert,
+Thanks for the update. I understand the current limitations better now:
 
-Distributed Tracing Infrastructure Monitoring using OneAgent deployment
-Cluster Monitoring implementation using OneAgent
-Configured DT SaaS integration in ECS environment with comprehensive monitoring of Hosts, Metrics, and Traces for Modernscore application
+OAS (Open source OTEL → OAAS) doesn't support CloudWatch
+eks-opentelemetry module doesn't support DT_SaaS or other vendors
 
-Dashboard & Visualization:
+CloudWatch-only approach:
+What if we simplified this and used only CloudWatch for now? This would mean:
 
-Successfully exported and migrated dashboards from DT Managed to SaaS environment
+Leveraging the existing eks-opentelemetry module with CloudWatch integration
+Accepting CloudWatch as our observability backend (at least initially)
+Avoiding the complexity of integrating with DT_SaaS or other third-party vendors
 
-Cloud Integration:
+This seems like it would work within current supported tooling and avoid the open source OTEL integration challenges you mentioned.
+Request for guidance:
 
-Implemented Dynatrace SaaS CloudWatch integration for enhanced AWS monitoring capabilities
+What's your recommendation for the best path forward given our current constraints?
+If CloudWatch-only is viable, what would be the timeline for implementing this?
+Can we prioritize this issue since observability is critical for our production workloads, and this simplified approach uses existing supported modules?
 
-Synthetic Monitoring & Alerting:
-
-Created and executed synthetic monitors for proactive application monitoring
-Configured alerting profiles and problem notification workflows
-
-
-
-
-Extensions Deployed:
-
-eks-opentelemetry: OpenTelemetry Collector for metrics and traces collection
-eks-xray: AWS X-Ray integration for distributed tracing
-xray-setup: Configuration and setup utilities for X-Ray integration
-
-✅ Successfully Implemented Features
-EKS Cluster-Level Monitoring:
-
-Node Metrics: CPU, Memory, Network, and Disk utilization from all EKS nodes
-Pod Metrics: Resource consumption, restart counts, and health status across namespaces
-Cluster Metrics: Overall cluster health, API server metrics, and etcd performance
-Kubernetes Events: Deployment, scaling, and error events from the cluster
-
-
-
-
-Application-Level Monitoring:
-
-Distributed Tracing: End-to-end request tracing across microservices
-Service Maps: Since the application was simple hello world saw few dependency call patterns -- Need to verify properly.
-
-Current Issues & Blockers
-- IMDS Proxy Configuration Issue:
-
-Root Cause: C2C team implemented changes to the Instance Metadata Service (IMDS) proxy configuration
-Impact: Complete disruption of metrics transmission from EKS to CloudWatch using eks-opentelemetry module
-Timeline: Issue started after the infrastructure change implementation
-Action Taken: PCSR ticket raised with detailed error logs and configuration details
-
-- eks-opentelemetry module not able to send logs to cloudwatch raised jira and shared my research to Robert, Poffle team.
-
-
-
-
-
-
-
-
-✅ Working Scenarios:
-
-Infrastructure & Application Monitoring: OneAgent deployment for distributed tracing and cluster monitoring
-Dynatrace SaaS integration: ECS environment monitoring (Hosts, Metrics, Traces for Modernscore application)
-Dashboard Migration: Successfully exported and migrated dashboards from DT Managed to SaaS
-Cloud Integration: Dynatrace SaaS CloudWatch integration for AWS monitoring
-Synthetic Monitoring: Created and executed synthetic monitors with alerting profiles
-
-❌ Not Working Scenarios:
-
-EKS CloudWatch Metrics: Stopped working after C2C team's IMDS proxy changes (PCSR ticket raised)
-OpenTelemetry Logs: Cannot send logs to CloudWatch (Jira raised, research shared with Robert/Poffle team)
-
-🔄 Work in Progress:
-
-OAS Basic Understanding: Documentation completed
-EKS with OAS - Dynatrace SaaS: In progress
-ECS with OAS - Dynatrace SaaS: In progress
+I'm flexible on the technical approach - the main goal is getting proper observability working in our Modular EKS environment. Would appreciate your thoughts on the most pragmatic solution we can move forward with.
