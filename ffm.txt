@@ -1,0 +1,347 @@
+TFM (Terraform Manager)
+The Terraform Manager service provides a single place to manage Terraform definitions, environments, workspaces dependencies in a seamless and simple way.
+
+Pre-requisites
+Notes:
+
+This project is based on pyneta, and it was followed this guide to create the baseline project
+Tool dependencies
+python: ds tool install python3.13
+make: ds tool install make
+poetry: pip install poetry
+Jq example: ds tool install jq
+curl example: ds tool install curl
+Authentication Configuration
+WIP: Authentication needs to be configured for GIT, Bitbucket and TFE
+
+ATTENTION: The below guides are temprary/poc purpouse configurations, these should be reworked to use FID and secret manager
+
+GIT Authentication
+Issue a new ssh keypar locally
+Install the public key into Bitbucket portal (User > Manage Account > SHH keys)
+# Create key pair
+ssh-keygen -t rsa
+
+### THIS IS A WORKAROUND ###
+# Copy private key so that Dockerfile will include in the image
+cp ~/.ssh/id_rsa ./ssh/id_rsa
+
+# Print and copy public key, then install in Bitbucket (User > Manage Account > SHH keys)
+cat ~/.ssh/id_rsa.pub
+Bitbucket API authentication
+Create a Token on Bitbucket portal (User > Manage Account > HTTP access token > Create token)
+Set the environment variable BITBUCKET_TOKEN for the service to use it
+# Set token to run application locally
+set BITBUCKET_TOKEN=<TOKEN_VALUE>
+TFE (Terraform Enterprise) APU authentication
+Create a Token on TFE portal (Account settings -> Tokens -> Create an API token)
+Set the environment variable TFE_TOKEN for the service to use it
+# Set token to run application locally
+set TFE_TOKEN=<TOKEN_VALUE>
+Run service locally
+Configure credentials as per above guide
+First time, build the application: sdlc_build.bat
+Execute the application deployment: sdlc_localrun.bat
+Build and deploy the service in ECS
+In oder to build and deploy the TFM service to run in ECS, we need to follow a couple of steps
+
+Note: Current docker image needs to include authentication ENV values (DO NOT COMMIT THESE TO BITBUCKET), check above section to configure them
+
+Configure authentication tokens on the Docker Image, edit the Dockerfile file and update the followin values:
+
+### THIS IS A WORKAROUND ###
+# Edit Dockerfile and include the following lines
+ENV BITBUCKET_TOKEN="<TOKEN_VALUE>"
+ENV TFE_TOKEN="<TOKEN_VALUE>"
+Execute the script sdlc_publish_image.bat to build and publish the TFM image
+
+This execution will show the sha256 value, copy this (this is needed o the next step)
+
+Edit the file terraform/variables/local-use1.tfvars and update the sha256 value at the end of the variable container_0
+
+Authenticate to AWS using pcl aws login as pave role
+
+Execute the script sdlc_provision.bat to deploy the application into ECS
+
+Load required data using the CLI
+
+Note: You must be in the root folder of the repo to execute the below commands
+
+# Note:
+# if need to remove old file: "tfm admin data delete spinnaker jib.yml"
+
+# Spinnaker
+tfm admin data upload spinnaker jib.yml data/spinnaker/jib.yml
+tfm admin data upload spinnaker spinnaker-trigger.yml data/spinnaker/spinnaker-trigger.yml
+
+# Jules
+tfm admin data upload jules Jenkinsfile data/jules/Jenkinsfile
+tfm admin data upload jules jules.yml data/jules/jules.yml
+
+# System template
+tfm admin data upload templates default.json data/templates/default.json
+Testing and using the service
+Once you have your TFM service running, you can use the CLI to interact with it, to know more about it, check the CLI Documnentation
+
+Configuring your CLI
+Python dependecies
+Click pip install click
+Pygments pip install pygments
+In order to your CLI being available on any path in your console, add your tfm cli path to your DS shell environment, and restart your DS shell to apply:
+
+    # Edit your DS shell configuration
+    ds config edit
+
+    # Add the below content to the DS config file
+    # Replace <TFM_DIR> with your real code path
+    # Validate/Replace BIN folders to your installed binaries
+    env: |
+        SET TFM_FOLDER=<TFM_DIR>
+        SET TFM_TFL_BIN=C:\Users\%USERNAME%\ds\tools\tfl-cli\latest\bin\tfl.bat
+        SET TFM_TF_BIN=C:\Users\%USERNAME%\ds\tools\terraform1.3\latest\terraform.exe
+        SET PATH=%PATH%;%TFM_FOLDER%\cli
+
+        # Optionally you can add your authentication tokens
+        SET BITBUCKET_TOKEN="<TOKEN_VALUE>"
+        SET TFE_TOKEN="<TOKEN_VALUE>"
+
+    # Check configuration guide:
+    # https://engineers.llmhase.net/docs/jet/plan-and-create/developer-desk/dev-shell/reference/cli-reference/ds_config_edit
+Configure the CLI to connect to your local service:
+
+tfm config server local
+
+# Optionally you can connect to your ECS instance
+tfm config server use1 # us-east-1
+tfm config server usw2 # us-west-2
+Optionally you can enable the CLI debug configuration to see each's request information
+
+tfm config debug true
+
+# You can disable debug by using
+tfm config debug false
+Finally, execute the command version to check the service live response
+
+tfm version
+This should give a similar response to:
+
+{
+    "build": "20250812_0626PM",
+    "hostname": "localhost",
+    "version": "v0.1"
+}
+
+
+
+-------
+
+TFM CLI v2
+The TFM CLI v2 provides direct request to the TFM service
+
+Pre-requisites
+Dependencies
+Click pip install click
+Pygments pip install pygments
+Configuration
+In order to your CLI being available on any path in your console, add your tfm cli path to your DS shell environment, and restart your DS shell to apply:
+
+```sh
+    # Edit your DS shell configuration
+    ds config edit
+
+    # Add the belo content to the DS config file
+    # Repace <DIR> with your real code path
+    env: |
+        SET PATH=%PATH%;<DIR>\terraform-code-manager\cli
+
+    # Check configuration guide:
+    # https://engineers.labview.net/docs/jet/plan-and-create/developer-desk/dev-shell/reference/cli-reference/ds_config_edit
+```
+Setup
+In order to start using the CLI we need to configure the target server that it will connect to. Additionally the CLI provides a seal_id and deployment_id context for each call done to the service, by doing so, the CLI will not require these values for each request, example:
+
+tfm config server <TARGET> # options: local, use1, usw2
+tfm config owner <SEAL_ID> <DEPLOYMENT_ID>
+
+# Optionals on any command:
+tfm --raw
+tfm --debug
+tfm --silent
+tfm --output <file>
+Usage
+The CLI provides a command line interface to interact with the TFM service, the below commands can be used:
+
+# Execution example
+tfm definition <CMD> <OPTION> [SUB] <ARGS>
+Available commands
+WIP Updates are still pending for CLI v2
+
+CMD	OPTION	SUB	ARGS	DESCRIPTION
+doc				Get Swagger documentation
+version				Get service version information
+config	server		<TARGET>	Set target server, Options: local, use1, usw2
+config	seal_id		<SEAL_ID>	Set working seal_id
+config	deployment_id		<DEPLOYMENT_ID>	Set working deployment_id
+config	debug		<TRUE/FALSE>	Set debug flag
+admin	data	list	<FOLDER>	List all files in a folder in the service
+admin	data	download	<FOLDER> <FILE>	Download a file from the service
+admin	data	upload	<FOLDER> <FILE> <LOCAL_FILE>	Upload a local file to the service
+admin	data	delete	<FOLDER> <FILE>	Delete a file in the service
+admin	get			List all the configurations
+admin	provider	list		List the provider interfaces available
+admin	provider	add	<PROVIDER> <INTERFACE> <SEAL_ID> <DEPLOYMENT_ID> <COMPONENT> [STRIPES]	Add a provider for an interface type
+admin	provider	replace	<PROVIDER> <INTERFACE> <SEAL_ID> <DEPLOYMENT_ID> <COMPONENT> [STRIPES]	Replace a provider for an interface type
+admin	provider	delete	<PROVIDER> <INTERFACE>	Delete a provider for an interface type
+template	list			List all the available templates
+template	variables		<TEMPLATE>	Get the template required variables
+template	get		<TEMPLATE> <COMPONENT> [VALUES]	Get the JSON description of the rendered template
+template	fromdb		<TEMPLATE> <COMPONENT> [VERSION]	Create a template from a defininion version on the database
+template	destroy		<TEMPLATE>	Destroy the template (this cannot be undone)
+module (mod)	origins			List all the available origins
+module (mod)	list		<ORIGIN>	List all the modules in a origin
+module (mod)	io		<ORIGIN> <MODULE> [VERSION]	List all the variables and outputs of a module
+definition (def)	list		[SEAL_ID] [DEPLOYMENT_ID]	List all the definitions in the database (can be filtered by seal_id and deployment_id)
+definition (def)	get		<COMPONENT> [VERSION]	Get the JSON description of a definition
+definition (def)	commit		<COMPONENT> <JIRA_ID>	Commit the definition's rendered Terraform code
+definition (def)	spinnaker	config	<COMPONENT> <JIRA_ID>	Commit Spinnaker configuration (jib) and create a PR
+definition (def)	spinnaker	get	<COMPONENT> <ENV> <STRIPE> <REGION> [VERSION]	Get pipeline information required for Spinnaker execution
+definition (def)	workbench	latest	<COMPONENT>	Get latest workbench for this definition
+definition (def)	workbench	spinnaker	<COMPONENT> <STRIPE> <REGION>	Get latest workbench information required for Spinnaker execution
+definition (def)	plan		<COMPONENT> <STRIPE> <REGION> [VERSION]	(only local) Render Terraform and execute plan
+definition (def)	apply		<COMPONENT> <STRIPE> <REGION> [VERSION]	(only local) Render Terraform and execute apply
+definition (def)	interfaces		<COMPONENT> [VERSION]	Get available output interfaces from this definition
+definition (def)	outputs		<COMPONENT> <ENV> <STRIPE> <REGION>	Get TFE outputs from a specific environment of this definition
+definition (def)	clean		<COMPONENT>	Clean server working folder (cache) of this defintition
+workbench (wb)	list			List current workspaces IDs
+workbench (wb)	upload		<FILE>	(will set edit context) Create a workbench from a JSON definition from local
+workbench (wb)	fromgit		<GIT_URL> <GIT_BRANCH> <COMPONENT> [SUBFOLDER]	(will set edit context) Create a workbench from a git repository's Terraform code
+workbench (wb)	fromdb		<COMPONENT> [VERSION]	(will set edit context) Create a workbench from a defininion version on the database
+workbench (wb)	fromtemplate		<TEMPLATE> <COMPONENT> [VALUES]	(will set edit context) Create a workbench from a template
+workbench (wb)	get		<WID>	Get the JSON description of a workbench
+workbench (wb)	publish		<WID>	Publish current workbench to the database
+workbench (wb)	commit		<WID>	Commit the workbench's rendered Terraform code
+workbench (wb)	destroy		<WID>	Destroy the workbench (this cannot be undone)
+edit	get			Get the JSON description
+edit	commit		<JIRA_ID>	Commit rendered Terraform code
+edit	validate			Validate Terraform code
+edit	plan		<STRIPE> <REGION>	(only local) Render Terraform and execute plan
+edit	publish			Publish definition to the database
+edit	destroy			Destroy the editor workbench (this cannot be undone)
+edit	spinnaker		<STRIPE> <REGION>	Get information required for Spinnaker execution
+edit	interfaces		[INTERFACE]	List all available interfaces from other's potential aprents
+edit	inputs		<ENVIRONMENT> <STRIPE> <REGION>	List all the resolved inputs for an specific environment
+edit	test	<resource>		Test if the editor contains a valid definition
+edit	list	<resource>		List resources
+edit	describe	<resource>		Describe an specific resource
+edit	add	<resource>		Add a resource
+edit	replace	<resource>		Replace a resouce
+edit	update	<resource>		Udpate a resource
+edit	delete	<resource>		Delete a resource
+edit	undo	<resource>		Roll back last change
+Available resource for edition
+RESOURCE	DESCRIPTION
+tfbundle	Configure required tf bundle
+stripe	Manage stripes
+region	Manage regions within a stripe
+input	Manage TFVARS for specific stripe
+variable	Manage Terraform variables blocks
+local	Manage Terraform locals block
+module	Manage Terraform module blocks
+data	Manage Terraform data blocks
+resource	Manage Terraform resource blocks
+output	Manage Terraform output blocks
+Specific commands for editor resources
+The below commands will require specific comands that are part of the edition body depending on the changes being made.
+
+ACTION	RESOURCE	ARGS
+list	input	<ENVIRONMENT> <STRIPE>
+list	variable/local/module/data/resource/output	
+describe	variable/local/module/output	<NAME>
+describe	data/resource	<TYPE> <NAME>
+add	stripe	<ENVIRONMENT> <STRIPE> <REGION_LIST>
+add	region	<ENVIRONMENT> <STRIPE> <REGION>
+add/replace	input	<ENVIRONMENT> <STRIPE> <NAME> <VALUE>
+add/replace	variable	<NAME> [DESCRIPTION] [TYPE]
+add/replace	local	<NAME> <VALUE>
+add/replace	module	<ORIGIN> <MODULE> <VERSION> <NAME> <values/file> <DATA>
+add/replace	data/resource	<TYPE> <NAME> <values/file> <DATA>
+add/replace	output	<NAME> <VALUE> [DESCRIPTION]
+update	tfbundle	<TFBUNDLE>
+update	module	<NAME> <INPUTS> [INTERFACES] [VERSION]
+delete	stripe	<ENVIRONMENT> <STRIPE>
+delete	region	<ENVIRONMENT> <STRIPE> <REGION>
+delete	input	<ENVIRONMENT> <STRIPE> <NAME>
+delete	variable/local/module/output	<NAME>
+delete	data/resource	<TYPE> <NAME>
+Practical examples
+Note: For more advanced examples, consult the /doc folder guides
+
+# Set working context
+tfm config server use1
+tfm config owner 123456 000001
+
+# List current definitions
+tfm definition list
+
+# List current templates
+tfm template list
+
+# Get rendered template just for review
+tfm template get base 123456 000001 test
+
+# Create a workspace with the rendered template
+tfm workbench fromtemplate base demo
+
+# Add environment / stripe / regions
+tfm edit add stripe dev d1 -r us-east-1
+
+# Test created workspace
+tfm edit test
+
+# This is another example, but for custom modules (GIT sourced)
+# Note: for JQ to work, DEBUG should be disabled
+tfm --raw module io tfm_aws b_demo --version 0.1.0 | jq ".variables | with_entries(select(.value.required == true))"
+
+# Add a TFM module
+tfm edit add module demo tfm_aws b_demo --version 0.1.0 -v a_value "Just a value test!"
+
+# Add output for the KMS key ARN
+tfm edit add output demo "This is a value!" --description "This is a demo description"
+
+# Add an stripe
+tfm edit add stripe dev d2 -r us-east-1
+
+# Add new region
+tfm edit add region dev d1 us-west-2
+
+# Check environment configuration
+tfm edit list stripes
+tfm --raw edit get | jq .environments # equivalent command using JQ
+
+# List modules
+tfm edit list modules
+tfm --raw edit get | jq .terraform.module # equivalent command using JQ
+
+# Set terraform bundle
+tfm edit update tfbundle '1.3.6-20250404-JPMC'
+
+# Test created workspace
+tfm edit test
+
+# Publish workspace version
+tfm edit publish
+
+# List current definitions in database
+tfm definition list
+
+# Create spinnaker configuration
+tfm definition spinnaker config demo <JIRA_ID>
+
+# Commit code to repository
+tfm definition commit demo <JIRA_ID>
+
+# Destroy the edit workbench
+tfm edit destroy
+
+# Clear cache
+tfm definition clean demo
