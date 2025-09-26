@@ -19,3 +19,45 @@ If CloudWatch-only is viable, what would be the timeline for implementing this?
 Can we prioritize this issue since observability is critical for our production workloads, and this simplified approach uses existing supported modules?
 
 I'm flexible on the technical approach - the main goal is getting proper observability working in our Modular EKS environment. Would appreciate your thoughts on the most pragmatic solution we can move forward with.
+
+
+-----
+
+
+
+Alternative Local Setup Method
+If the standard README commands fail, use this alternative approach:
+Issue Resolution Steps
+
+Fix Poetry Run Command
+
+Navigate to line 5 in the relevant execution file
+Change: poetry run python run.py
+To: python run.py
+
+
+Fix Import Path in init.py
+
+Go to: src/terraform_code_manager/__init__.py
+Modify line 2: Add two dots .. before the import statement
+Change: from terraform_code_manager_configs import app_config, app_version
+To: from ..terraform_code_manager_configs import app_config, app_version
+
+
+Export Poetry Dependencies
+
+bash   # Run from project root directory
+   poetry export -f requirements.txt --output requirements.txt --without-hashes
+
+Verify Requirements File
+
+Check that requirements.txt exists in your project root directory
+
+
+Install Dependencies
+
+bash   pip install -r requirements.txt
+
+Execute Local Setup
+
+bash   sdlc_localrun.bat
